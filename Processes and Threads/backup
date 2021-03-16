@@ -1,0 +1,527 @@
+#include <stdio.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <semaphore.h>
+#include <fcntl.h>
+#include <sys/types.h>
+#include <pthread.h>
+#include <sys/wait.h>
+#include "a2_helper.h"
+
+pthread_mutex_t lock8_1 = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t lock8_2 = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t lock12 = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t lock5_3 = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t lock8_3 = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t lock5_1 = PTHREAD_MUTEX_INITIALIZER;
+sem_t logSem6;
+sem_t logSem1;
+sem_t logSem2;
+sem_t logSem;
+
+typedef struct
+{
+	int process;
+	int thread;
+} indici;
+
+void* thread_fn2_3(void *param)
+{
+    indici *t = (indici*)param;
+
+//	if (!(t->process == 8 && t->thread == 3)){
+
+	if (t->process == 8 && t->thread == 1)
+		pthread_mutex_lock(&lock8_1);
+
+	info(BEGIN, t->process, t->thread);
+
+	if (t->process == 8 && t->thread == 2){
+        pthread_mutex_unlock(&lock8_1);
+        pthread_mutex_lock(&lock8_2);
+    }	
+
+	info(END, t->process, t->thread);
+
+	if (t->process == 8 && t->thread == 1)
+		pthread_mutex_unlock(&lock8_2);
+/*	}
+
+   else {
+		sem_wait(&logSem2);
+		info(BEGIN, t->process, t->thread);
+		info(END, t->process, t->thread);
+		sem_post(&logSem2);
+		
+	}*/
+
+/*	if (thinfo->process == 8 && thinfo->thread == 2){
+		sem_wait(&logSem1);
+		info(BEGIN, thinfo->process, thinfo->thread);
+	}
+	else if (thinfo->process == 8 && thinfo->thread == 1){
+		sem_wait(&logSem2);
+		info(BEGIN, thinfo->process, thinfo->thread);
+		info(END, thinfo->process, thinfo->thread);
+		info(END, 8, 2);
+		sem_post(&logSem2);
+		sem_post(&logSem1);
+	}
+	else{
+		info(BEGIN, thinfo->process, thinfo->thread);
+		info(END, thinfo->process, thinfo->thread);
+	}*/
+    return NULL;    
+}
+int count = 0;
+
+void* thread_fn2_4(void *param)
+{
+    indici *t = (indici*)param;
+    
+    sem_wait(&logSem6);
+
+	   info(BEGIN, t->process, t->thread);
+	   info(END, t->process, t->thread);
+
+  /*     if(thinfo->thread != 12){
+	        info(END, thinfo->process, thinfo->thread);
+			sem_wait(&logSem1);
+			count--;
+			sem_post(&logSem1);
+	   }
+	   else{
+		   if(count == 6){
+			   info(END, thinfo->process, thinfo->thread);
+		   }
+	   }*/
+    sem_post(&logSem6);
+
+    return NULL;    
+}
+
+void* thread_fn2_5(void *param)
+{
+    indici *t = (indici*)param;
+
+	if (t->process == 5 && t->thread == 3){
+		sem_wait(&logSem1);
+		info(BEGIN, t->process, t->thread);
+		info(END, t->process, t->thread);
+		sem_post(&logSem1);
+		//sem_post(&logSem2);
+	}
+	else{
+		info(BEGIN, t->process, t->thread);
+		info(END, t->process, t->thread);
+	}
+
+    return NULL;    
+}
+
+void creeazaThreaduri(pthread_t tids[], indici ind[], int nr_threads)
+{
+	for (int i = 0; i < nr_threads; i++)
+	if(nr_threads == 4){
+		pthread_create(&tids[i], NULL, thread_fn2_3, &ind[i]);
+	}
+	else if(nr_threads == 47){
+		pthread_create(&tids[i], NULL, thread_fn2_4, &ind[i]);
+	}
+	else if(nr_threads == 5){
+		pthread_create(&tids[i], NULL, thread_fn2_5, &ind[i]);
+	}
+
+	for (int i = 0; i < nr_threads; i++)
+		pthread_join(tids[i], NULL);
+}
+
+
+
+pid_t pid2, pid3, pid4, pid5, pid6, pid7, pid8, pid9;
+
+pid_t creeazaProces(int id)
+{
+	pid_t pid;
+	if ((pid = fork()) == 0)
+	{
+		info(BEGIN, id, 0);
+
+		if (id == 2)
+		{
+			pid4 = creeazaProces(4);
+			pid5 = creeazaProces(5);
+
+            pthread_t threads[47];
+			indici ind[47] = {{2,1},{2,2},{2,3},{2,4},{2,5},{2,6},{2,7},{2,8},{2,9},{2,10},
+							{2,11},{2,12},{2,13},{2,14},{2,15},{2,16},{2,17},{2,18},{2,19},
+							{2,20},{2,21},{2,22},{2,23},{2,24},{2,25},{2,26},{2,27},{2,28},
+							{2,29},{2,30},{2,31},{2,32},{2,33},{2,34},{2,35},{2,36},{2,37},
+							{2,38}, {2,39},{2,40},{2,41},{2,42},{2,43},{2,44},{2,45},{2,46},{2,47}};
+			creeazaThreaduri(threads, ind, 47);
+
+			waitpid(pid4, NULL, 0);
+            waitpid(pid5, NULL, 0);
+			
+		}
+		else if (id == 5)
+		{
+            pid6 = creeazaProces(6);
+			pid7 = creeazaProces(7);
+
+            pthread_t threads[5];
+			indici args[5] = {{5,1},{5,2},{5,3},{5,4},{5,5}};
+			creeazaThreaduri(threads, args, 5);
+
+			waitpid(pid6, NULL, 0);
+            waitpid(pid7, NULL, 0);
+		}
+		else if (id == 7)
+		{
+			pid9 = creeazaProces(9);
+			waitpid(pid9, NULL, 0);
+		}
+		
+
+		info(END, id, 0);
+		exit(0);
+	}
+	else
+		return pid;
+}
+
+
+int main(){
+    init();
+
+    info(BEGIN, 1, 0);
+
+	if(sem_init(&logSem6, 0, 6) != 0) {
+        perror("Could not init the semaphore");
+        return -1;
+    }
+	if(sem_init(&logSem, 0, 1) != 0) {
+        perror("Could not init the semaphore");
+        return -1;
+    }
+	if(sem_init(&logSem1, 0, 1) != 0) {
+        perror("Could not init the semaphore");
+        return -1;
+    }
+	if(sem_init(&logSem2, 0, 0) != 0) {
+        perror("Could not init the semaphore");
+        return -1;
+    }
+
+
+    pid2 = creeazaProces(2);
+    pid3 = creeazaProces(3);
+    pid8 = creeazaProces(8);
+    
+    pthread_t threads[4];
+	indici ind[4] = {{8, 1},{8,2},{8,3},{8,4}};
+	pthread_mutex_lock(&lock8_1);
+	pthread_mutex_lock(&lock8_2);
+	pthread_mutex_lock(&lock12);
+	pthread_mutex_lock(&lock5_3);
+	pthread_mutex_lock(&lock8_3);
+	pthread_mutex_lock(&lock5_1);
+	creeazaThreaduri(threads, ind, 4);
+    waitpid(pid2, NULL, 0);
+    waitpid(pid3, NULL, 0);
+    waitpid(pid8, NULL, 0);
+    info(END, 1, 0);
+
+	sem_destroy(&logSem6);
+	sem_destroy(&logSem);
+	sem_destroy(&logSem1);
+	sem_destroy(&logSem2);
+    return 0;
+}
+
+//V2
+#include <stdio.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <semaphore.h>
+#include <fcntl.h>
+#include <sys/types.h>
+#include <pthread.h>
+#include <sys/wait.h>
+#include "a2_helper.h"
+
+
+typedef struct 
+{
+	int process;
+	int thread;
+}indici;
+
+typedef struct
+{
+	indici *ind;
+	pthread_mutex_t *lock8_1;
+    pthread_mutex_t *lock8_2;
+    pthread_mutex_t *lock12;
+    pthread_mutex_t *lock5_3;
+    pthread_mutex_t *lock8_3;
+    pthread_mutex_t *lock5_1;
+    sem_t *logSem6;
+    sem_t *logSem1;
+    sem_t *logSem2;
+    sem_t *logSem;
+} th_struct;
+
+
+
+void* thread_fn2_3(void *param)
+{
+    th_struct *t = (th_struct*)param;
+
+//	if (!(t->process == 8 && t->thread == 3)){
+
+//	if (t->ind->process == 8 && t->ind->thread == 1)
+//		pthread_mutex_lock(t->lock8_1);
+
+	info(BEGIN, t->ind->process, t->ind->thread);
+
+//	if (t->ind->process == 8 && t->ind->thread == 2){
+ //       pthread_mutex_unlock(t->lock8_1);
+   //     pthread_mutex_lock(t->lock8_2);
+  //  }	
+
+	info(END, t->ind->process, t->ind->thread);
+
+//	if (t->ind->process == 8 && t->ind->thread == 1)
+//		pthread_mutex_unlock(t->lock8_2);
+/*	}
+
+   else {
+		sem_wait(&logSem2);
+		info(BEGIN, t->process, t->thread);
+		info(END, t->process, t->thread);
+		sem_post(&logSem2);
+		
+	}*/
+
+/*	if (thinfo->process == 8 && thinfo->thread == 2){
+		sem_wait(&logSem1);
+		info(BEGIN, thinfo->process, thinfo->thread);
+	}
+	else if (thinfo->process == 8 && thinfo->thread == 1){
+		sem_wait(&logSem2);
+		info(BEGIN, thinfo->process, thinfo->thread);
+		info(END, thinfo->process, thinfo->thread);
+		info(END, 8, 2);
+		sem_post(&logSem2);
+		sem_post(&logSem1);
+	}
+	else{
+		info(BEGIN, thinfo->process, thinfo->thread);
+		info(END, thinfo->process, thinfo->thread);
+	}*/
+    return NULL;    
+}
+int count = 0;
+
+void* thread_fn2_4(void *param)
+{
+    th_struct *t = (th_struct*)param;
+    
+  //  sem_wait(t->logSem6);
+
+	   info(BEGIN, t->ind->process, t->ind->thread);
+	   info(END, t->ind->process, t->ind->thread);
+
+  /*     if(thinfo->thread != 12){
+	        info(END, thinfo->process, thinfo->thread);
+			sem_wait(&logSem1);
+			count--;
+			sem_post(&logSem1);
+	   }
+	   else{
+		   if(count == 6){
+			   info(END, thinfo->process, thinfo->thread);
+		   }
+	   }*/
+ //   sem_post(t->logSem6);
+
+    return NULL;    
+}
+
+void* thread_fn2_5(void *param)
+{
+    th_struct *t = (th_struct*)param;
+
+	if (t->ind->process == 5 && t->ind->thread == 3){
+//		sem_wait(t->logSem1);
+		info(BEGIN, t->ind->process, t->ind->thread);
+		info(END, t->ind->process, t->ind->thread);
+//		sem_post(t->logSem1);
+		
+	}
+	else{
+		info(BEGIN, t->ind->process, t->ind->thread);
+		info(END, t->ind->process, t->ind->thread);
+	}
+
+    return NULL;    
+}
+
+void creeazaThreaduri(pthread_t tids[], th_struct params, int nr_threads)
+{
+	for (int i = 0; i < nr_threads; i++)
+	if(nr_threads == 4){
+		pthread_create(&tids[i], NULL, thread_fn2_3, &params);
+	}
+	else if(nr_threads == 47){
+		pthread_create(&tids[i], NULL, thread_fn2_4, &params);
+	}
+	else if(nr_threads == 5){
+		pthread_create(&tids[i], NULL, thread_fn2_5, &params);
+	}
+
+	for (int i = 0; i < nr_threads; i++)
+		pthread_join(tids[i], NULL);
+}
+
+
+
+pid_t pid2, pid3, pid4, pid5, pid6, pid7, pid8, pid9;
+
+pid_t creeazaProces(int id, th_struct params)
+{
+	pid_t pid;
+	if ((pid = fork()) == 0)
+	{
+		info(BEGIN, id, 0);
+
+		if (id == 2)
+		{
+			pid4 = creeazaProces(4, params);
+			pid5 = creeazaProces(5, params);
+
+            pthread_t threads[47];
+			indici ind[47];
+			
+	       for(int i = 0; i < 47; i++){
+		        ind[i].process = 2;
+		        ind[i].thread = i + 1;
+	        }	
+			params.ind = ind;			
+			creeazaThreaduri(threads, params, 47);
+
+			waitpid(pid4, NULL, 0);
+            waitpid(pid5, NULL, 0);
+			
+		}
+		else if (id == 5)
+		{
+            pid6 = creeazaProces(6, params);
+			pid7 = creeazaProces(7, params);
+
+            pthread_t threads[5];
+			indici ind[5];
+			for(int i = 0; i < 5; i++){
+		        ind[i].process = 5;
+		        ind[i].thread = i + 1;
+	        }	
+			params.ind = ind;	
+			creeazaThreaduri(threads, params, 5);
+
+			waitpid(pid6, NULL, 0);
+            waitpid(pid7, NULL, 0);
+		}
+		else if (id == 7)
+		{
+			pid9 = creeazaProces(9, params);
+			waitpid(pid9, NULL, 0);
+		}
+		
+
+		info(END, id, 0);
+		exit(0);
+	}
+	else
+		return pid;
+}
+
+
+int main(){
+
+    init();
+
+    info(BEGIN, 1, 0);
+	pthread_mutex_t lock8_1 = PTHREAD_MUTEX_INITIALIZER;
+    pthread_mutex_t lock8_2 = PTHREAD_MUTEX_INITIALIZER;
+    pthread_mutex_t lock12 = PTHREAD_MUTEX_INITIALIZER;
+    pthread_mutex_t lock5_3 = PTHREAD_MUTEX_INITIALIZER;
+    pthread_mutex_t lock8_3 = PTHREAD_MUTEX_INITIALIZER;
+    pthread_mutex_t lock5_1 = PTHREAD_MUTEX_INITIALIZER;
+    sem_t logSem6;
+    sem_t logSem1;
+    sem_t logSem2;
+    sem_t logSem;
+
+	if(sem_init(&logSem6, 0, 6) != 0) {
+        perror("Could not init the semaphore");
+        return -1;
+    }
+	if(sem_init(&logSem, 0, 1) != 0) {
+        perror("Could not init the semaphore");
+        return -1;
+    }
+	if(sem_init(&logSem1, 0, 1) != 0) {
+        perror("Could not init the semaphore");
+        return -1;
+    }
+	if(sem_init(&logSem2, 0, 0) != 0) {
+        perror("Could not init the semaphore");
+        return -1;
+    }
+	th_struct params;
+	params.logSem = &logSem;
+	params.logSem1 = &logSem1;
+	params.logSem2 = &logSem2;
+	params.logSem6 = &logSem6;
+	params.lock5_1 = &lock5_1;
+	params.lock5_3 = &lock5_3;
+	params.lock8_1 = &lock8_1;
+	params.lock8_2 = &lock8_2;
+	params.lock8_3 = &lock8_3;
+	params.lock12 = &lock12;
+
+
+    pid2 = creeazaProces(2, params);
+    pid3 = creeazaProces(3, params);
+    pid8 = creeazaProces(8, params);
+    
+    pthread_t threads[4];
+	indici ind[4];
+
+
+	for(int i = 0; i < 4; i++){
+		ind[i].process = 8;
+		ind[i].thread = i + 1;
+	}
+	params.ind = ind;
+/*	pthread_mutex_lock(params.lock8_1);
+	pthread_mutex_lock(params.lock8_2);
+	pthread_mutex_lock(params.lock12);
+	pthread_mutex_lock(params.lock5_3);
+	pthread_mutex_lock(params.lock8_3);
+	pthread_mutex_lock(params.lock5_1);*/
+	creeazaThreaduri(threads, params, 4);
+    waitpid(pid2, NULL, 0);
+    waitpid(pid3, NULL, 0);
+    waitpid(pid8, NULL, 0);
+    info(END, 1, 0);
+
+	sem_destroy(&logSem6);
+	sem_destroy(&logSem);
+	sem_destroy(&logSem1);
+	sem_destroy(&logSem2);
+    return 0;
+}
+
+
